@@ -1,107 +1,69 @@
-
 #include "greedy.h"
-#include <cstdlib>
-#include <unordered_set>
-#include <vector>
 
 using namespace std;
 
+// These helpers are only needed inside this file.
+namespace
+{
+// Treat seats that are already occupied as unavailable.
+void markOccupiedSeats(const vector<Seat>& seats, vector<bool>& used)
+{
+    for (size_t j = 0; j < seats.size(); ++j)
+        used[j] = seats[j].occupied;
+}
+
+// Give one student the first seat that fits their needs.
+bool assignStudent(
+    const Student& student,
+    const vector<Seat>& seats,
+    vector<bool>& used,
+    vector<int>& allocation,
+    size_t studentIndex
+)
+{
+    for (size_t seatIndex = 0; seatIndex < seats.size(); ++seatIndex)
+    {
+        // Skip seats that have already been taken.
+        if (used[seatIndex])
+            continue;
+
+        // Students who need accessible seating can only use accessible seats.
+        if (student.needsAccessible && !seats[seatIndex].accessible)
+            continue;
+
+        // Save the seat number and mark it taken for the next student.
+        allocation[studentIndex] = static_cast<int>(seatIndex);
+        used[seatIndex] = true;
+        return true;
+    }
+
+    // No suitable seat was available, so the student stays unassigned.
+    return false;
+}
+}
+
+// Return the seat index for each student, or -1 if they could not be seated.
 vector<int> allocateGreedy(
     const vector<Student>& students,
     const vector<Seat>& seats
-) {
-    // -1 means that a student has not been allocated a seat.
+)
+{
+    // Every student starts unassigned; no seats are used yet.
     vector<int> allocation(students.size(), -1);
-
-    // Remember which seats are occupied or already assigned.
     vector<bool> used(seats.size(), false);
 
-    for (size_t i = 0; i < seats.size(); ++i) {
-        used[i] = seats[i].occupied;
-    }
+    // Keep seats that were already occupied out of the allocation.
+    markOccupiedSeats(seats, used);
 
-    // Track students already processed to avoid duplicate IDs.
-    unordered_set<string> seenIDs;
+    // Give accessible-seat requests first choice.
+    for (size_t i = 0; i < students.size(); ++i)
+        if (students[i].needsAccessible)
+            assignStudent(students[i], seats, used, allocation, i);
 
-    // Allocate students needing accessible seating first.
-    for (int priority = 0; priority < 2; ++priority) {
-        for (size_t i = 0; i < students.size(); ++i) {
-            const Student& student = students[i];
-
-            // First pass: accessible students.
-            // Second pass: all other students.
-            if ((priority == 0) != student.needsAccessible) {
-                continue;
-            }
-
-            // Do not allocate the same student ID twice.
-            if (seenIDs.count(student.id)) {
-                continue;
-            }
-            seenIDs.insert(student.id);
-
-            int bestSeat = -1;
-            int fallbackSeat = -1;
-
-            // Search for a suitable seat.
-            for (size_t j = 0; j < seats.size(); ++j) {
-                const Seat& seat = seats[j];
-
-                if (used[j]) {
-                    continue;
-                }
-
-                // Accessible students must use accessible seats.
-                if (student.needsAccessible && !seat.accessible) {
-                    continue;
-                }
-
-                bool adjacentClassmate = false;
-
-                // Check students who have already been seated.
-                for (size_t k = 0; k < students.size(); ++k) {
-                    int assignedSeat = allocation[k];
-
-                    if (assignedSeat == -1) {
-                        continue;
-                    }
-
-                    const Student& otherStudent = students[k];
-                    const Seat& otherSeat = seats[assignedSeat];
-
-                    if (student.className == otherStudent.className &&
-                        seat.hallId == otherSeat.hallId &&
-                        seat.row == otherSeat.row &&
-                        abs(seat.column - otherSeat.column) == 1) {
-                        adjacentClassmate = true;
-                        break;
-                    }
-                }
-
-                // Prefer a seat without a same-class neighbour.
-                if (!adjacentClassmate) {
-                    bestSeat = static_cast<int>(j);
-                    break;
-                }
-
-                // Keep a valid seat as a backup.
-                if (fallbackSeat == -1) {
-                    fallbackSeat = static_cast<int>(j);
-                }
-            }
-
-            // Prefer the best seat; otherwise use the backup.
-            int chosenSeat = (bestSeat != -1)
-                             ? bestSeat
-                             : fallbackSeat;
-
-            if (chosenSeat != -1) {
-                allocation[i] = chosenSeat;
-                used[chosenSeat] = true;
-            }
-        }
-    }
+    // Then place everyone else in the first open seat.
+    for (size_t i = 0; i < students.size(); ++i)
+        if (!students[i].needsAccessible)
+            assignStudent(students[i], seats, used, allocation, i);
 
     return allocation;
 }
-

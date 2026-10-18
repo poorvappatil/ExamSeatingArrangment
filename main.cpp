@@ -1,9 +1,6 @@
-
 #include <iostream>
 #include <vector>
 #include <string>
-#include <limits>
-#include <chrono>
 
 #include "models.h"
 #include "greedy.h"
@@ -12,54 +9,46 @@
 
 using namespace std;
 
-// Read an integer safely.
-int readInt(string message)
-{
-    int value;
+//to read a number and handle invalid input
+int readInt(string message){
 
-    while (true)
-    {
-        cout << message;
+    int number;
 
-        if (cin >> value)
-        {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            return value;
+    while(true){
+        cout<<message;
+
+        if(cin>>number){
+            cin.ignore(1000,'\n');
+            return number;
         }
 
-        cout << "Please enter a valid number.\n";
+        cout<<"Invalid input. Please enter a valid number.\n";
         cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.ignore(1000,'\n');
     }
 }
 
-// Read a line of text.
-string readText(string message)
-{
-    string value;
+// Read a full line including spaces
+string readText(string message){
+    string text;
     cout << message;
-    getline(cin, value);
-    return value;
+    getline(cin, text);
+    return text;
 }
 
-// Create all individual seats from hall dimensions.
-vector<Seat> createSeats(const vector<Hall>& halls)
-{
+// Create a separate Seat object for every position in every hall
+vector<Seat> createSeats(const vector<Hall>& halls){
     vector<Seat> seats;
 
-    for (int i = 0; i < (int)halls.size(); i++)
-    {
-        for (int r = 1; r <= halls[i].rows; r++)
-        {
-            for (int c = 1; c <= halls[i].columns; c++)
-            {
+    for (int i = 0; i < (int)halls.size(); i++){
+        for (int row = 1; row <= halls[i].rows; row++){
+            for (int col = 1; col <= halls[i].columns; col++){
                 Seat seat;
 
                 seat.hallId = halls[i].id;
-                seat.row = r;
-                seat.column = c;
-                seat.accessible =
-                    (c == halls[i].accessibleColumn);
+                seat.row = row;
+                seat.column = col;
+                seat.accessible = (col == halls[i].accessibleColumn);
                 seat.occupied = false;
 
                 seats.push_back(seat);
@@ -70,13 +59,11 @@ vector<Seat> createSeats(const vector<Hall>& halls)
     return seats;
 }
 
-// Enter student details.
-void enterStudents(vector<Student>& students)
-{
+// Enter student information and prevent duplicate IDs
+void enterStudents(vector<Student>& students){
     int count;
 
-    do
-    {
+    do{
         count = readInt("Number of students: ");
 
         if (count <= 0)
@@ -89,55 +76,48 @@ void enterStudents(vector<Student>& students)
     for (int i = 0; i < count; i++)
     {
         Student student;
+        bool duplicate;
 
-        cout << "\nStudent " << i + 1 << "\n";
+        do{
+            cout << "\nStudent " << i + 1 << "\n";
 
-        student.id = readText("Student ID: ");
+            student.id = readText("Student ID: ");
+
+            duplicate = false;
+
+            //check for duplicates
+            for (int j = 0; j < (int)students.size(); j++){
+                if (students[j].id == student.id) duplicate = true;
+            }
+
+            if (duplicate==true)
+                cout << "That ID already exists. Please try again.\n";
+
+        } while (duplicate==true);
+
         student.name = readText("Student name: ");
         student.className = readText("Class: ");
 
         int accessible;
 
-        do
-        {
-            accessible = readInt(
-                "Needs accessible seating? (1 = Yes, 0 = No): "
-            );
+        do{
+            accessible = readInt("Needs accessible seating? (1 = Yes, 0 = No): ");
 
-            if (accessible != 0 && accessible != 1)
-                cout << "Enter 1 or 0.\n";
+            if(accessible != 0 && accessible != 1) cout << "Enter 1 for Yes or 0 for No.\n";
 
-        } while (accessible != 0 && accessible != 1);
+        } while(accessible != 0 && accessible != 1);
 
         student.needsAccessible = (accessible == 1);
 
-        bool duplicate = false;
-
-        for (int j = 0; j < (int)students.size(); j++)
-        {
-            if (students[j].id == student.id)
-                duplicate = true;
-        }
-
-        if (duplicate)
-        {
-            cout << "Duplicate student ID. Enter this student again.\n";
-            i--;
-        }
-        else
-        {
-            students.push_back(student);
-        }
+        students.push_back(student);
     }
 }
 
-// Enter hall details.
-void enterHalls(vector<Hall>& halls)
-{
+// Enter hall information and prevent duplicate hall IDs
+void enterHalls(vector<Hall>& halls){
     int count;
 
-    do
-    {
+    do{
         count = readInt("Number of halls: ");
 
         if (count <= 0)
@@ -147,85 +127,67 @@ void enterHalls(vector<Hall>& halls)
 
     halls.clear();
 
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++){
         Hall hall;
+        bool duplicate;
 
-        cout << "\nHall " << i + 1 << "\n";
+        do{
+            cout << "\nHall " << i + 1 << "\n";
 
-        hall.id = readText("Hall ID: ");
-        hall.name = readText("Hall name: ");
+            hall.id = readText("Hall ID: ");
 
-        int duplicate;
+            duplicate = false;
 
-        do
-        {
-            duplicate = 0;
-
+            //check for duplicates
             for (int j = 0; j < (int)halls.size(); j++)
             {
                 if (halls[j].id == hall.id)
-                    duplicate = 1;
+                    duplicate = true;
             }
 
-            if (duplicate)
-            {
-                cout << "Duplicate hall ID. Enter a different ID.\n";
-                hall.id = readText("Hall ID: ");
-            }
+            if (duplicate==true)
+                cout << "That hall ID already exists. Try another one.\n";
 
-        } while (duplicate);
+        } while (duplicate==true);
 
-        do
-        {
+        hall.name = readText("Hall name: ");
+
+        do{
             hall.rows = readInt("Number of rows: ");
             hall.columns = readInt("Number of columns: ");
 
-            if (hall.rows <= 0 || hall.columns <= 0)
-                cout << "Rows and columns must be positive.\n";
+            if(hall.rows <= 0 || hall.columns <= 0) cout << "Rows and columns must be greater than zero.\n";
 
-        } while (hall.rows <= 0 || hall.columns <= 0);
+        } while(hall.rows <= 0 || hall.columns <= 0);
 
-        do
-        {
-            hall.accessibleColumn =
-                readInt("Accessible column (1-based): ");
+        do{
+            hall.accessibleColumn = readInt("Accessible column (1-based): ");
 
-            if (hall.accessibleColumn < 1 ||
-                hall.accessibleColumn > hall.columns)
-            {
-                cout << "Column must be between 1 and "
+            if(hall.accessibleColumn < 1 || hall.accessibleColumn > hall.columns){
+                cout << "Enter a column between 1 and "
                      << hall.columns << ".\n";
             }
 
-        } while (hall.accessibleColumn < 1 ||
-                 hall.accessibleColumn > hall.columns);
+        } while(hall.accessibleColumn < 1 || hall.accessibleColumn > hall.columns);
 
         halls.push_back(hall);
     }
 }
 
-// Display entered students and halls.
-void displayData(
-    const vector<Student>& students,
-    const vector<Hall>& halls
-)
-{
-    cout << "\n--- STUDENTS ---\n";
+// Show the student and hall details entered by the user
+void displayData(const vector<Student>& students, const vector<Hall>& halls){
+    cout << "\n \t\t\t\t STUDENTS \n";
 
-    for (int i = 0; i < (int)students.size(); i++)
-    {
+    for (int i = 0; i < (int)students.size(); i++){
         cout << students[i].id << " | "
              << students[i].name << " | "
-             << students[i].className << " | Accessible: "
-             << (students[i].needsAccessible ? "Yes" : "No")
-             << "\n";
+             << students[i].className << " | Needs accessible seat: "
+             << (students[i].needsAccessible ? "Yes" : "No") << "\n";
     }
 
-    cout << "\n--- HALLS ---\n";
+    cout << "\n \t\t\t\t HALLS \n";
 
-    for (int i = 0; i < (int)halls.size(); i++)
-    {
+    for (int i = 0; i < (int)halls.size(); i++){
         cout << halls[i].id << " | "
              << halls[i].name << " | "
              << halls[i].rows << " rows x "
@@ -234,25 +196,32 @@ void displayData(
     }
 }
 
-// Display allocation results and check for conflicts.
-void displayResults(
-    const vector<Student>& students,
-    const vector<Seat>& seats,
-    const vector<int>& allocation
-)
-{
-    int allocated = 0;
+// Count how many students received seats
+int countAllocated(const vector<int>& allocation){
+    int count = 0;
 
-    cout << "\n--- SEATING ALLOCATION ---\n";
+    for (int i = 0; i < (int)allocation.size(); i++){
+        if (allocation[i] != -1) count++;
+    }
 
-    for (int i = 0; i < (int)students.size(); i++)
-    {
-        cout << students[i].id << " - "
-             << students[i].name << ": ";
+    return count;
+}
 
-        if (allocation[i] == -1)
+// Display seat assignments and run the conflict checker.
+void displayResults(const vector<Student>& students,const vector<Seat>& seats,const vector<int>& allocation){
+    cout << "\n \t\t\t\t SEATING ALLOCATION \n";
+
+    for (int i = 0; i < (int)students.size(); i++){
+        cout << students[i].id << " - "<< students[i].name << ": ";
+
+        if (i >= (int)allocation.size() || allocation[i] == -1)
         {
             cout << "UNALLOCATED\n";
+        }
+        else if (allocation[i] < 0 ||
+                 allocation[i] >= (int)seats.size())
+        {
+            cout << "INVALID SEAT INDEX\n";
         }
         else
         {
@@ -260,31 +229,26 @@ void displayResults(
 
             cout << "Hall " << seats[seatIndex].hallId
                  << ", Row " << seats[seatIndex].row
-                 << ", Column " << seats[seatIndex].column
-                 << "\n";
-
-            allocated++;
+                 << ", Column " << seats[seatIndex].column << "\n";
         }
     }
 
-    cout << "\nAllocated students: " << allocated
-         << " / " << students.size() << "\n";
+    int allocated = countAllocated(allocation);
 
-    cout << "Unallocated students: "
-         << students.size() - allocated << "\n";
+    cout << "\nAllocated: " << allocated << " / " << students.size() << "\n";
 
-    vector<string> conflicts =
-        detectConflicts(students, seats, allocation);
+    cout << "Unallocated: " << students.size() - allocated << "\n";
 
-    cout << "\n--- CONFLICT CHECK ---\n";
+    vector<string> conflicts = detectConflicts(students, seats, allocation);
 
-    if (conflicts.empty())
-    {
+    cout << "\n \t\t\t\t CONFLICT CHECK \n";
+
+    if (conflicts.empty()){
         cout << "No conflicts detected.\n";
     }
-    else
-    {
-        for (int i = 0; i < (int)conflicts.size(); i++)
+
+    else{
+        for (int i = 0; i <conflicts.size(); i++)
             cout << "- " << conflicts[i] << "\n";
     }
 }
@@ -294,145 +258,53 @@ int main()
     vector<Student> students;
     vector<Hall> halls;
     vector<Seat> seats;
-
-    cout << "EXAMINATION SEATING ALLOCATION\n";
-    cout << "Enter data for this session.\n\n";
-
-    enterStudents(students);
-    enterHalls(halls);
-
-    seats = createSeats(halls);
-
     vector<int> lastAllocation;
-    string lastAlgorithm = "None";
 
+    string lastAlgorithm = "None";
     int choice;
 
     do
     {
-        cout << "\n========== MENU ==========\n";
-        cout << "1. Display students and halls\n";
-        cout << "2. Run Greedy allocation\n";
-        cout << "3. Run Backtracking allocation\n";
-        cout << "4. Compare both algorithms\n";
-        cout << "5. Display most recent allocation\n";
-        cout << "6. Exit\n";
+        cout << "\n \t\t\t\t EXAM SEATING SYSTEM \n";
+        cout << "1. Display Data\n";
+        cout << "2. Run Greedy Algorithm\n";
+        cout << "3. Run Backtracking Algorithm\n";
+        cout << "4. Show Last Allocation\n";
+        cout << "5. Exit\n";
 
-        choice = readInt("Enter choice: ");
+        choice = readInt("Enter your choice: ");
 
-        if (choice == 1)
+        switch (choice)
         {
-            displayData(students, halls);
-        }
-        else if (choice == 2)
-        {
-            lastAllocation = allocateGreedy(students, seats);
-            lastAlgorithm = "Greedy";
+            case 1:
+                displayData(students, halls);
+                break;
 
-            displayResults(students, seats, lastAllocation);
-        }
-        else if (choice == 3)
-        {
-            lastAllocation =
-                allocateBacktracking(students, seats);
-
-            lastAlgorithm = "Backtracking";
-
-            displayResults(students, seats, lastAllocation);
-        }
-        else if (choice == 4)
-        {
-            auto startGreedy = chrono::steady_clock::now();
-
-            vector<int> greedyResult =
-                allocateGreedy(students, seats);
-
-            auto endGreedy = chrono::steady_clock::now();
-
-            auto startBacktracking = chrono::steady_clock::now();
-
-            vector<int> backtrackingResult =
-                allocateBacktracking(students, seats);
-
-            auto endBacktracking = chrono::steady_clock::now();
-
-            long long greedyTime =
-                chrono::duration_cast<chrono::microseconds>(
-                    endGreedy - startGreedy
-                ).count();
-
-            long long backtrackingTime =
-                chrono::duration_cast<chrono::microseconds>(
-                    endBacktracking - startBacktracking
-                ).count();
-
-            int greedyCount = 0;
-            int backtrackingCount = 0;
-
-            for (int i = 0; i < (int)students.size(); i++)
-            {
-                if (greedyResult[i] != -1)
-                    greedyCount++;
-
-                if (backtrackingResult[i] != -1)
-                    backtrackingCount++;
-            }
-
-            cout << "\n--- ALGORITHM COMPARISON ---\n";
-            cout << "Greedy allocated: "
-                 << greedyCount << " / " << students.size() << "\n";
-            cout << "Greedy time: " << greedyTime << " microseconds\n";
-
-            cout << "Backtracking allocated: "
-                 << backtrackingCount << " / " << students.size() << "\n";
-            cout << "Backtracking time: "
-                 << backtrackingTime << " microseconds\n";
-
-            cout << "\nGreedy conflict check:\n";
-            vector<string> greedyConflicts =
-                detectConflicts(students, seats, greedyResult);
-
-            if (greedyConflicts.empty())
-                cout << "No conflicts detected.\n";
-            else
-                for (int i = 0; i < (int)greedyConflicts.size(); i++)
-                    cout << "- " << greedyConflicts[i] << "\n";
-
-            cout << "\nBacktracking conflict check:\n";
-            vector<string> backtrackingConflicts =
-                detectConflicts(students, seats, backtrackingResult);
-
-            if (backtrackingConflicts.empty())
-                cout << "No conflicts detected.\n";
-            else
-                for (int i = 0; i < (int)backtrackingConflicts.size(); i++)
-                    cout << "- " << backtrackingConflicts[i] << "\n";
-        }
-        else if (choice == 5)
-        {
-            if (lastAllocation.empty())
-            {
-                cout << "No allocation has been run yet.\n";
-            }
-            else
-            {
-                cout << "Most recent algorithm: "
-                     << lastAlgorithm << "\n";
-
+            case 2:
+                lastAllocation = allocateGreedy(students, seats);
+                lastAlgorithm = "Greedy";
                 displayResults(students, seats, lastAllocation);
-            }
-        }
-        else if (choice == 6)
-        {
-            cout << "Exiting program. Goodbye!\n";
-        }
-        else
-        {
-            cout << "Invalid choice. Select 1 to 6.\n";
+                break;
+
+            case 3:
+                lastAllocation = allocateBacktracking(students, seats);
+                lastAlgorithm = "Backtracking";
+                displayResults(students, seats, lastAllocation);
+                break;
+
+            case 4:
+                displayResults(students, seats, lastAllocation);
+                break;
+
+            case 5:
+                cout << "Exiting program...\n";
+                break;
+
+            default:
+                cout << "Invalid choice. Please try again.\n";
         }
 
-    } while (choice != 6);
+    } while (choice != 5);
 
     return 0;
 }
-

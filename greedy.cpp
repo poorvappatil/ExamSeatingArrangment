@@ -1,5 +1,5 @@
 #include "greedy.h"
-#include "conflicts.h"
+#include <cmath>
 
 using namespace std;
 

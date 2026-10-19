@@ -1,4 +1,3 @@
-
 #ifndef CONFLICTS_H
 #define CONFLICTS_H
 
@@ -29,34 +28,48 @@ struct ConflictReport {
     }
 };
 
-vector<string> detectConflicts(const vector<Student>& students,
-                               const vector<Seat>& seats,
-                               const vector<int>& allocation);
+vector<string> detectConflicts(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation
+);
 
-vector<string> detectConflicts(const vector<Student>& students,
-                               const vector<Seat>& seats,
-                               const vector<int>& allocation,
-                               const vector<Hall>& halls);
+vector<string> detectConflicts(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation,
+    const vector<Hall>& halls
+);
 
-vector<string> detectHardViolations(const vector<Student>& students,
-                                    const vector<Seat>& seats,
-                                    const vector<int>& allocation);
+vector<string> detectHardViolations(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation
+);
 
-vector<string> detectHardViolations(const vector<Student>& students,
-                                    const vector<Seat>& seats,
-                                    const vector<int>& allocation,
-                                    const vector<Hall>& halls);
+vector<string> detectHardViolations(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation,
+    const vector<Hall>& halls
+);
 
-vector<string> detectUnallocatedStudents(const vector<Student>& students,
-                                         const vector<int>& allocation);
+vector<string> detectUnallocatedStudents(
+    const vector<Student>& students,
+    const vector<int>& allocation
+);
 
-ConflictReport generateConflictReport(const vector<Student>& students,
-                                      const vector<Seat>& seats,
-                                      const vector<int>& allocation);
+ConflictReport generateConflictReport(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation
+);
 
-ConflictReport generateConflictReport(const vector<Student>& students,
-                                      const vector<Seat>& seats,
-                                      const vector<int>& allocation,
-                                      const vector<Hall>& halls);
+ConflictReport generateConflictReport(
+    const vector<Student>& students,
+    const vector<Seat>& seats,
+    const vector<int>& allocation,
+    const vector<Hall>& halls
+);
 
 #endif

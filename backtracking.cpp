@@ -1,4 +1,4 @@
-﻿#include "backtracking.h"
+#include "backtracking.h"
 
 #include <functional>
 #include <vector>

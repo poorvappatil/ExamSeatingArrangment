@@ -1,155 +1,102 @@
 #include "backtracking.h"
-
-#include <functional>
-#include <vector>
+#include <cmath>
 
 using namespace std;
 
-namespace {
-
-bool createsSameClassAdjacency(
+void solve(
+    int index,
     const vector<Student>& students,
     const vector<Seat>& seats,
-    const vector<int>& allocation,
-    int studentIndex,
-    int seatIndex
-)
+    vector<int>& allocation,
+    vector<int>& best,
+    vector<bool>& used,
+    int count,
+    int& bestCount)
 {
-    const Seat& candidateSeat = seats[seatIndex];
-
-    for (int i = 0; i < (int)students.size(); i++)
-    {
-        if (allocation[i] == -1)
-            continue;
-
-        if (students[i].className != students[studentIndex].className)
-            continue;
-
-        const Seat& assignedSeat = seats[allocation[i]];
-
-        if (assignedSeat.hallId != candidateSeat.hallId)
-            continue;
-
-        if (assignedSeat.row != candidateSeat.row)
-            continue;
-
-        if (abs(assignedSeat.column - candidateSeat.column) != 1)
-            continue;
-
-        return true;
+    if (count > bestCount) {
+        bestCount = count;
+        best = allocation;
     }
 
-    return false;
-}
-
-bool isSeatStillAvailable(
-    const vector<bool>& used,
-    const vector<Seat>& seats,
-    int seatIndex
-)
-{
-    return !used[seatIndex] && !seats[seatIndex].occupied;
-}
-
-int countFreeSeats(const vector<bool>& used, const vector<Seat>& seats)
-{
-    int freeSeats = 0;
-
-    for (int i = 0; i < (int)seats.size(); i++)
+    if (index == (int)students.size() || bestCount == (int)students.size()) return;
+    for (int pass = 0; pass < 2; pass++)
     {
-        if (!used[i] && !seats[i].occupied)
-            freeSeats++;
+        bool allowConflict = (pass == 1);
+
+        for (int i = 0; i < (int)seats.size(); i++)
+        {
+            if (used[i])
+                continue;
+
+            if (students[index].needsAccessible &&
+                !seats[i].accessible)
+                continue;
+
+            bool conflict = false;
+
+            for (int j = 0; j < index; j++)
+            {
+                if (allocation[j] == -1)
+                    continue;
+
+                if (students[index].className.empty())
+                    continue;
+
+                if (students[index].className != students[j].className)
+                    continue;
+
+                const Seat& other = seats[allocation[j]];
+
+                if (seats[i].hallId == other.hallId &&
+                    seats[i].row == other.row &&
+                    abs(seats[i].column - other.column) == 1)
+                {
+                    conflict = true;
+                    break;
+                }
+            }
+
+            if (conflict && !allowConflict)
+                continue;
+
+            allocation[index] = i;
+            used[i] = true;
+
+            solve(index + 1, students, seats, allocation,
+                best, used, count + 1, bestCount);
+
+            used[i] = false;
+            allocation[index] = -1;
+
+            if (bestCount == (int)students.size())
+                return;
+        }
     }
 
-    return freeSeats;
-}
+    // Try leaving this student unallocated.
+    allocation[index] = -1;
 
+    solve(index + 1, students, seats, allocation,
+          best, used, count, bestCount);
 }
 
 vector<int> allocateBacktracking(
     const vector<Student>& students,
-    const vector<Seat>& seats
-)
+    const vector<Seat>& seats)
 {
     vector<int> allocation(students.size(), -1);
-    vector<bool> used(seats.size(), false);
+    vector<int> best(students.size(), -1);
 
+    vector<bool> used(seats.size(), false);
     for (int i = 0; i < (int)seats.size(); i++)
     {
-        if (seats[i].occupied)
-            used[i] = true;
+        used[i] = seats[i].occupied;
     }
 
-    vector<int> order;
-    order.reserve(students.size());
+    int bestCount = 0;
 
-    for (int i = 0; i < (int)students.size(); i++)
-    {
-        if (students[i].needsAccessible)
-            order.push_back(i);
-    }
+    solve(0, students, seats, allocation,
+          best, used, 0, bestCount);
 
-    for (int i = 0; i < (int)students.size(); i++)
-    {
-        if (!students[i].needsAccessible)
-            order.push_back(i);
-    }
-
-    function<bool(int)> solve = [&](int index) -> bool
-    {
-        if (index == (int)order.size())
-            return true;
-
-        int studentIndex = order[index];
-        vector<int> preferredSeats;
-        vector<int> fallbackSeats;
-
-        int remainingStudents = (int)order.size() - index;
-        int freeSeats = countFreeSeats(used, seats);
-
-        if (freeSeats < remainingStudents)
-            return false;
-
-        for (int seatIndex = 0; seatIndex < (int)seats.size(); seatIndex++)
-        {
-            if (!isSeatStillAvailable(used, seats, seatIndex))
-                continue;
-
-            if (students[studentIndex].needsAccessible && !seats[seatIndex].accessible)
-                continue;
-
-            bool conflictByAdjacency = createsSameClassAdjacency(
-                students,
-                seats,
-                allocation,
-                studentIndex,
-                seatIndex
-            );
-
-            if (!conflictByAdjacency)
-                preferredSeats.push_back(seatIndex);
-            else
-                fallbackSeats.push_back(seatIndex);
-        }
-
-        vector<int> candidates = preferredSeats;
-        candidates.insert(candidates.end(), fallbackSeats.begin(), fallbackSeats.end());
-
-        for (int seatIndex : candidates)
-        {
-            used[seatIndex] = true;
-            allocation[studentIndex] = seatIndex;
-
-            if (solve(index + 1))
-                return true;
-
-            allocation[studentIndex] = -1;
-            used[seatIndex] = false;
-        }
-
-        return false;
-    };
-
-    solve(0);
-    return allocation;
+    return best;
 }

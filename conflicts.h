@@ -31,12 +31,6 @@ struct ConflictReport {
 vector<string> detectConflicts(
     const vector<Student>& students,
     const vector<Seat>& seats,
-    const vector<int>& allocation
-);
-
-vector<string> detectConflicts(
-    const vector<Student>& students,
-    const vector<Seat>& seats,
     const vector<int>& allocation,
     const vector<Hall>& halls
 );

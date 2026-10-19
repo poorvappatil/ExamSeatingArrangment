@@ -1,13 +1,12 @@
 #include "conflicts.h"
 #include <algorithm>
 #include <cmath>
-#include <sstream>
 
 using namespace std;
 
 string seatLocation(int index, const vector<Seat>& seats)
 {
-    if (index < 0 || index >= (int)seats.size())
+    if (index < 0 || index >= seats.size())
         return "Invalid seat index " + to_string(index);
 
     const Seat& seat = seats[index];
@@ -23,8 +22,8 @@ vector<string> detectUnallocatedStudents(
 {
     vector<string> result;
 
-    for (int i = 0; i < (int)students.size(); i++) {
-        if (i >= (int)allocation.size() || allocation[i] == -1) {
+    for (int i = 0; i < students.size(); i++) {
+        if (i >= allocation.size() || allocation[i] == -1) {
             result.push_back(
                 "Unallocated student: " + students[i].id +
                 " - " + students[i].name
@@ -42,7 +41,7 @@ vector<string> detectHardViolations(
     const vector<Hall>& halls)
 {
     vector<string> result;
-    int limit = min((int)students.size(), (int)allocation.size());
+    int limit = min(students.size(), allocation.size());
 
     if (allocation.size() > students.size()) {
         result.push_back("Allocation has more entries than students.");
@@ -54,7 +53,7 @@ vector<string> detectHardViolations(
         if (seatIndex == -1)
             continue;
 
-        if (seatIndex < -1 || seatIndex >= (int)seats.size()) {
+        if (seatIndex < -1 || seatIndex >= seats.size()) {
             result.push_back(
                 "Invalid seat index for student " + students[i].id
             );
@@ -107,7 +106,7 @@ vector<string> detectHardViolations(
         for (int j = 0; j < i; j++) {
             int otherIndex = allocation[j];
 
-            if (otherIndex < 0 || otherIndex >= (int)seats.size())
+            if (otherIndex < 0 || otherIndex >= seats.size())
                 continue;
 
             const Seat& other = seats[otherIndex];
@@ -155,13 +154,6 @@ vector<string> detectHardViolations(
     );
 }
 
-vector<string> detectConflicts(
-    const vector<Student>& students,
-    const vector<Seat>& seats,
-    const vector<int>& allocation)
-{
-    return detectHardViolations(students, seats, allocation);
-}
 
 vector<string> detectConflicts(
     const vector<Student>& students,
@@ -171,6 +163,7 @@ vector<string> detectConflicts(
 {
     return detectHardViolations(students, seats, allocation, halls);
 }
+
 
 ConflictReport generateConflictReport(
     const vector<Student>& students,

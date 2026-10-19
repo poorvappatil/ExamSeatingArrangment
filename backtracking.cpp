@@ -3,67 +3,70 @@
 
 using namespace std;
 
-bool canUseSeat(
-    int studentIndex,
-    int seatIndex,
-    const vector<Student>& students,
-    const vector<Seat>& seats,
-    const vector<int>& allocation)
-{
-    const Student& student = students[studentIndex];
-    const Seat& seat = seats[seatIndex];
-
-    if (student.needsAccessible && !seat.accessible)
-        return false;
-
-    for (int i = 0; i < studentIndex; i++) {
-        if (allocation[i] == -1)
-            continue;
-
-        const Seat& other = seats[allocation[i]];
-
-        if (seat.hallId == other.hallId &&
-            seat.row == other.row &&
-            abs(seat.column - other.column) == 1 &&
-            !student.className.empty() &&
-            student.className == students[i].className) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool solve(
-    int studentIndex,
+void solve(
+    int index,
     const vector<Student>& students,
     const vector<Seat>& seats,
     vector<int>& allocation,
-    vector<bool>& used)
+    vector<int>& best,
+    vector<bool>& used,
+    int count,
+    int& bestCount)
 {
-    if (studentIndex == (int)students.size())
-        return true;
+    if (count > bestCount) {
+        bestCount = count;
+        best = allocation;
+    }
+
+    if (index == (int)students.size() || bestCount == (int)students.size())
+        return;
 
     for (int i = 0; i < (int)seats.size(); i++) {
         if (used[i])
             continue;
 
-        if (!canUseSeat(studentIndex, i, students, seats, allocation))
+        if (students[index].needsAccessible && !seats[i].accessible)
             continue;
 
-        allocation[studentIndex] = i;
+        bool conflict = false;
+
+        for (int j = 0; j < index; j++) {
+            if (allocation[j] == -1)
+                continue;
+
+            const Seat& other = seats[allocation[j]];
+
+            if (!students[index].className.empty() &&
+                students[index].className == students[j].className &&
+                seats[i].hallId == other.hallId &&
+                seats[i].row == other.row &&
+                abs(seats[i].column - other.column) == 1) {
+                conflict = true;
+                break;
+            }
+        }
+
+        if (conflict)
+            continue;
+
+        allocation[index] = i;
         used[i] = true;
 
-        if (solve(studentIndex + 1, students, seats, allocation, used))
-            return true;
+        solve(index + 1, students, seats, allocation,
+              best, used, count + 1, bestCount);
 
-        allocation[studentIndex] = -1;
         used[i] = false;
+        allocation[index] = -1;
+
+        if (bestCount == (int)students.size())
+            return;
     }
 
-    allocation[studentIndex] = -1;
+    // Try leaving this student unallocated.
+    allocation[index] = -1;
 
-    return solve(studentIndex + 1, students, seats, allocation, used);
+    solve(index + 1, students, seats, allocation,
+          best, used, count, bestCount);
 }
 
 vector<int> allocateBacktracking(
@@ -71,9 +74,12 @@ vector<int> allocateBacktracking(
     const vector<Seat>& seats)
 {
     vector<int> allocation(students.size(), -1);
+    vector<int> best(students.size(), -1);
     vector<bool> used(seats.size(), false);
+    int bestCount = 0;
 
-    solve(0, students, seats, allocation, used);
+    solve(0, students, seats, allocation,
+          best, used, 0, bestCount);
 
-    return allocation;
+    return best;
 }

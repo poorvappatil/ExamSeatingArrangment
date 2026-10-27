@@ -1,6 +1,0 @@
-S1|First|SY-10|1
-S2|Second|SY-10|0
-S3|Third|SY-09|0
-S4|Fourth|SY-09|0
-S5|Fifth|SY-09|1
-S6|Sixth|SY-10|1

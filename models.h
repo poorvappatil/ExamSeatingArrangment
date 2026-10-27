@@ -1,6 +1,5 @@
 #ifndef MODELS_H
 #define MODELS_H
-
 #include <string>
 using namespace std;
 
@@ -26,5 +25,4 @@ struct Seat {
     bool accessible;
     bool occupied;
 };
-
 #endif

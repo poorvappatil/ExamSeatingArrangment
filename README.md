@@ -7,9 +7,10 @@ A C++ terminal-based project that assigns students to examination seats using Gr
 - Enter and store hall details
 - Enter student details
 - Allocate seats using Greedy
-- Allocate seats using Backtracking
 - Check seating conflicts
 - Display allocation results
+- Display Seating Map
+- Save and Load Student and Hall details through file handling
 
 ## Requirements
 
@@ -21,7 +22,7 @@ A C++ terminal-based project that assigns students to examination seats using Gr
 Compile the project:
 
 ```bash
-g++ -std=c++17 main.cpp greedy.cpp backtracking.cpp conflicts.cpp -o main
+g++ main.cpp greedy.cpp backtracking.cpp conflicts.cpp -o main
 ```
 
 Run on Windows:

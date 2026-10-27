@@ -1,0 +1,2 @@
+H1|Main hall|2|2|1
+H2|Secondary|1|1|1
